@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WA-TG Bridge</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <div class="logo">W</div>
+  <h1>WA-TG Bridge</h1>
+  <nav id="nav">
+    <button data-tab="overview" class="active" data-i18n="nav.overview"></button>
+    <button data-tab="android" data-i18n="nav.android"></button>
+    <button data-tab="login" data-i18n="nav.login"></button>
+    <button data-tab="config" data-i18n="nav.config"></button>
+    <button data-tab="settings" data-i18n="nav.settings"></button>
+    <button data-tab="update" data-i18n="nav.update"></button>
+    <button data-tab="logs" data-i18n="nav.logs"></button>
+  </nav>
+  <span id="langBox"></span>
+  <button class="btn" id="logoutBtn" data-i18n="nav.logout"></button>
+</header>
+
+<main>
+  <!-- 概览 / Overview -->
+  <section class="tab active" id="tab-overview">
+    <div class="grid" id="stats"></div>
+    <div class="card">
+      <h2 data-i18n="ov.wizard"></h2>
+      <ul class="steps" id="steps"></ul>
+    </div>
+    <div class="card">
+      <h2 data-i18n="ov.expiryTitle"></h2>
+      <p class="muted" style="margin:0" data-i18n-html="ov.expiryText"></p>
+    </div>
+  </section>
+
+  <!-- 安卓 / Android -->
+  <section class="tab" id="tab-android">
+    <div class="card">
+      <div class="row">
+        <h2 style="margin:0;margin-right:auto"><span data-i18n="an.title"></span> <span id="androidState" class="muted" style="font-weight:400"></span></h2>
+        <button class="btn primary" id="androidStart" data-i18n="btn.start"></button>
+        <button class="btn danger" id="androidStop" data-i18n="btn.shutdown"></button>
+      </div>
+      <div id="kvmWarn"></div>
+    </div>
+    <div class="two">
+      <div>
+        <div class="card">
+          <h2 data-i18n="an.app"></h2>
+          <p class="muted" id="waAppState" style="margin-top:0"></p>
+          <div class="row">
+            <button class="btn primary" id="installWa"></button>
+            <button class="btn" id="reinstallWa" data-i18n="an.reinstall" hidden></button>
+            <label class="btn"><span data-i18n="an.upload"></span><input type="file" id="apkFile" accept=".apk" hidden></label>
+          </div>
+          <div id="jobState" class="muted" style="margin-top:8px"></div>
+          <p class="muted" style="font-size:12px" data-i18n="an.updateNote"></p>
+          <h3 data-i18n="an.first"></h3>
+          <ol class="howto">
+            <li data-i18n="an.f1"></li>
+            <li data-i18n="an.f2"></li>
+            <li data-i18n="an.f3"></li>
+            <li data-i18n="an.f4"></li>
+          </ol>
+          <div class="notice" data-i18n="an.primaryWarn"></div>
+        </div>
+        <div class="card">
+          <h2 data-i18n="an.quick"></h2>
+          <div class="row">
+            <button class="btn" data-key="home" data-i18n="an.home"></button>
+            <button class="btn" data-key="back" data-i18n="an.back"></button>
+            <button class="btn" data-key="recent" data-i18n="an.recent"></button>
+            <button class="btn" data-key="wake" data-i18n="an.wake"></button>
+            <button class="btn" data-key="whatsapp" data-i18n="an.openWa"></button>
+          </div>
+          <h3 data-i18n="an.textTitle"></h3>
+          <div class="row">
+            <input type="text" id="sendText" data-i18n-ph="an.textPh" style="flex:1;min-width:160px">
+            <button class="btn" id="sendTextBtn" data-i18n="btn.send"></button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="an.screen"></h2>
+        <div class="vnc-wrap" id="vncAndroid"></div>
+        <p class="muted" style="font-size:12px;margin-bottom:0"><span data-i18n="an.screenTip"></span>
+          <a href="#" data-reconnect="vncAndroid" data-i18n="an.reconnect"></a> ·
+          <a href="/novnc/vnc.html?autoconnect=1&resize=scale&reconnect=1&path=websockify" target="_blank" data-i18n="an.newWindow"></a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WhatsApp 关联 / link -->
+  <section class="tab" id="tab-login">
+    <div class="two">
+      <div>
+        <div class="card" id="loginPanel"></div>
+      </div>
+      <div class="card">
+        <h2 data-i18n="an.androidScreen"></h2>
+        <div class="vnc-wrap" id="vncLogin"></div>
+        <p class="muted" style="font-size:12px;margin-bottom:0"><a href="#" data-reconnect="vncLogin" data-i18n="an.reconnect"></a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 配置 / Config -->
+  <section class="tab" id="tab-config">
+    <div class="card">
+      <div class="row"><h2 style="margin:0;margin-right:auto" data-i18n="cfg.title"></h2>
+        <button class="btn" id="toggleRaw" data-i18n="cfg.raw"></button></div>
+      <div class="notice info" data-i18n="cfg.prep"></div>
+    </div>
+    <form id="cfgForm"></form>
+    <div class="card" id="rawCard" hidden>
+      <h2>config.yaml</h2>
+      <textarea class="yaml" id="rawYaml" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:10px"><button class="btn primary" id="saveRaw" data-i18n="cfg.saveYaml"></button>
+        <span class="muted" data-i18n="cfg.yamlNote"></span></div>
+    </div>
+  </section>
+
+  <!-- 保活与提醒 / Keep-alive -->
+  <section class="tab" id="tab-settings">
+    <div class="card">
+      <h2 data-i18n="set.kaTitle"></h2>
+      <p class="muted" style="margin-top:0" data-i18n="set.kaDesc"></p>
+      <form id="setForm">
+        <div class="field bool"><label><input type="checkbox" name="ka_enabled"> <span data-i18n="set.kaEnable"></span></label></div>
+        <div class="field"><label data-i18n="set.kaDays"></label><div><input type="number" name="ka_days" min="1" max="13"><div class="help" data-i18n="set.kaDaysHelp"></div></div></div>
+        <div class="field"><label data-i18n="set.kaMinutes"></label><div><input type="number" name="ka_minutes" min="5" max="240"><div class="help" data-i18n="set.kaMinutesHelp"></div></div></div>
+        <div class="field bool"><label><input type="checkbox" name="ka_update"> <span data-i18n="set.kaUpdate"></span></label></div>
+        <h2 style="margin-top:18px" data-i18n="set.rmTitle"></h2>
+        <div class="field bool"><label><input type="checkbox" name="rm_enabled"> <span data-i18n="set.rmEnable"></span></label></div>
+        <div class="field"><label data-i18n="set.rmDays"></label><div><input type="number" name="rm_days" min="1" max="30"><div class="help" data-i18n="set.rmDaysHelp"></div></div></div>
+        <p class="muted" style="font-size:12px" data-i18n="set.langNote"></p>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" type="submit" data-i18n="btn.save"></button>
+          <button class="btn" type="button" id="testReminder" data-i18n="set.test"></button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- 版本更新 / Updates -->
+  <section class="tab" id="tab-update">
+    <div class="card">
+      <h2 data-i18n="up.title"></h2>
+      <p class="muted" style="margin-top:0" data-i18n="up.desc"></p>
+      <div class="grid" id="upCurrent"></div>
+      <div id="upJob" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="up.relTitle"></h2>
+      <p class="muted" style="margin-top:0" data-i18n="up.relDesc"></p>
+      <div class="row">
+        <select id="upRelSel" style="width:auto;min-width:200px"></select>
+        <button class="btn primary" id="upRelBtn" data-i18n="up.relBtn"></button>
+        <button class="btn" id="upRelRefresh" data-i18n="btn.refresh"></button>
+      </div>
+      <div class="notice" data-i18n="up.relNote"></div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="up.srcTitle"></h2>
+      <p class="muted" style="margin-top:0" data-i18n="up.srcDesc"></p>
+      <div class="row">
+        <input type="text" id="upRef" value="main" style="width:240px" data-i18n-ph="up.srcPh">
+        <button class="btn primary" id="upSrcBtn" data-i18n="up.srcBtn"></button>
+      </div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="up.upTitle"></h2>
+      <p class="muted" style="margin-top:0" data-i18n="up.upDesc"></p>
+      <label class="btn"><span data-i18n="up.upBtn"></span><input type="file" id="upFile" hidden></label>
+    </div>
+    <div class="card">
+      <h2 data-i18n="up.apkTitle"></h2>
+      <p class="muted" style="margin:0" data-i18n="up.apkDesc"></p>
+      <div class="row" style="margin-top:10px"><button class="btn" data-go="android" data-i18n="up.apkGo"></button></div>
+    </div>
+  </section>
+
+  <!-- 日志 / Logs -->
+  <section class="tab" id="tab-logs">
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <select id="logName" style="width:auto">
+          <option value="bridge" data-i18n="log.bridge"></option>
+          <option value="pair" data-i18n="log.pair"></option>
+          <option value="emulator" data-i18n="log.emulator"></option>
+          <option value="manager" data-i18n="log.manager"></option>
+          <option value="update" data-i18n="log.update"></option>
+          <option value="vnc">VNC</option>
+          <option value="supervisor">supervisord</option>
+        </select>
+        <label class="row"><input type="checkbox" id="logAuto" checked> <span data-i18n="log.auto"></span></label>
+        <button class="btn" id="logRefresh" data-i18n="btn.refresh"></button>
+      </div>
+      <pre class="log" id="logText"></pre>
+    </div>
+  </section>
+</main>
+<div id="toast"></div>
+<script src="/static/i18n.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

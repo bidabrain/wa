@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WA-TG Bridge</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="login-box card">
+    <div class="row"><h2 style="margin:0;margin-right:auto" data-i18n="login.title"></h2><span id="langBox"></span></div>
+    <p class="muted" data-i18n-html="login.desc"></p>
+    <form id="f">
+      <input type="password" id="pw" data-i18n-ph="login.ph" autofocus>
+      <div class="row" style="margin-top:12px"><button class="btn primary" type="submit" data-i18n="login.btn"></button><span id="err" style="color:var(--bad)"></span></div>
+    </form>
+  </div>
+  <script src="/static/i18n.js"></script>
+  <script src="/static/login.js"></script>
+</body>
+</html>

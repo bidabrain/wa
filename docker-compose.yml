@@ -1,0 +1,17 @@
+services:
+  wa-tg-bridge:
+    build: .
+    image: wa-tg-bridge:latest
+    container_name: wa-tg-bridge
+    restart: unless-stopped
+    ports:
+      - "8080:8080"           # 管理面板（含安卓网页画面）
+    environment:
+      WEB_PASSWORD: "change-me"   # 管理面板密码，务必修改
+      TZ: Asia/Shanghai
+      # EMU_RAM_MB: "3072"        # 模拟器内存
+      # EMU_CORES: "2"            # 模拟器 CPU 核数
+    devices:
+      - /dev/kvm:/dev/kvm     # 运行安卓模拟器必需；宿主机没有 KVM 时删除这两行（仅可用二维码+实体手机登录）
+    volumes:
+      - ./data:/data          # 配置、WhatsApp 会话、安卓模拟器数据全部在这里

@@ -32,24 +32,81 @@
 
 ## 安装
 
+### 方式一：使用预编译镜像（推荐）
+
+镜像由 GitHub Actions 自动构建并发布在 `ghcr.io/bidabrain/wa:latest`，服务器上无需下载源码、无需本地编译。
+
+1. 新建一个目录，创建 `docker-compose.yml`：
+
+   ```bash
+   mkdir -p ~/wa-tg-bridge && cd ~/wa-tg-bridge
+   ```
+
+   ```yaml
+   services:
+     wa-tg-bridge:
+       image: ghcr.io/bidabrain/wa:latest
+       container_name: wa-tg-bridge
+       restart: unless-stopped
+       ports:
+         - "8080:8080"
+       environment:
+         WEB_PASSWORD: "change-me"   # 管理面板密码，务必修改
+         TZ: Asia/Shanghai
+       devices:
+         - /dev/kvm:/dev/kvm         # 宿主机没有 KVM 时删除这两行
+       volumes:
+         - ./data:/data
+   ```
+
+2. 拉取镜像并启动（镜像约 6–8 GB，首次拉取需要一些时间）：
+
+   ```bash
+   docker compose pull
+   ```
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. 浏览器打开 `http://服务器IP:8080`，用 `WEB_PASSWORD` 登录。
+
+**更新镜像**（数据都在 `data/`，不受影响）：
+
 ```bash
-git clone <本仓库> wa-tg-bridge && cd wa-tg-bridge
-# 修改 docker-compose.yml 里的 WEB_PASSWORD
+docker compose pull && docker compose up -d
+```
+
+> 只是更新 watgbridge 的话不需要更新镜像，直接在面板「版本更新」页操作即可，见下文「更新」。
+
+如果拉取时报 `unauthorized` / `denied`，说明 GHCR 上的镜像包还是私有的：在 GitHub 个人主页 → Packages → `wa` → Package settings → Change visibility 设为 Public；或者在服务器上先用有 `read:packages` 权限的 Personal Access Token 执行 `docker login ghcr.io -u bidabrain`。
+
+### 方式二：docker run
+
+```bash
+docker run -d --name wa-tg-bridge --restart unless-stopped \
+  -p 8080:8080 --device /dev/kvm \
+  -e WEB_PASSWORD=change-me -e TZ=Asia/Shanghai \
+  -v $PWD/data:/data ghcr.io/bidabrain/wa:latest
+```
+
+### 方式三：从源码自行构建
+
+```bash
+git clone https://github.com/bidabrain/wa.git wa-tg-bridge && cd wa-tg-bridge
+```
+
+修改 `docker-compose.yml` 里的 `WEB_PASSWORD` 后：
+
+```bash
 docker compose up -d --build
 ```
 
-或者直接用 docker：
+Fork 本仓库后推送到 `main`，`.github/workflows/docker.yml` 会自动构建并发布到你自己的 `ghcr.io/<用户名>/<仓库名>`。
 
-```bash
-docker build -t wa-tg-bridge .
-docker run -d --name wa-tg-bridge --restart unless-stopped \
-  -p 8080:8080 --device /dev/kvm \
-  -e WEB_PASSWORD=change-me -v $PWD/data:/data wa-tg-bridge
-```
+---
 
-推送到 GitHub 后，`.github/workflows/docker.yml` 会自动构建并发布到 `ghcr.io/<用户名>/<仓库名>`，之后在服务器上把 compose 里的 `build: .` 换成该镜像即可，无需本地构建。
-
-打开 `http://服务器IP:8080`，输入密码登录。未设置 `WEB_PASSWORD` 时会自动生成，见 `docker logs wa-tg-bridge` 或 `data/.web_password`。
+未设置 `WEB_PASSWORD` 时会自动生成密码，见 `docker logs wa-tg-bridge` 或 `data/.web_password`。
 
 > 管理面板可以直接操作你的 WhatsApp，**不要在公网裸奔**：请设置强密码，最好放在反向代理（HTTPS）或 Tailscale/WireGuard 之后。
 
@@ -94,7 +151,7 @@ docker run -d --name wa-tg-bridge --restart unless-stopped \
 
 **模拟器里的 WhatsApp**：「安卓手机」页点「检查并更新到最新版」，会对比 whatsapp.com 官方最新 APK，有新版才下载并覆盖安装（聊天和登录都保留）。也可以上传自己下载的官方 APK，或在「保活与提醒」里开启「保活开机时自动更新」。
 
-**镜像本身**（Android SDK、管理面板）：`docker compose build --pull && docker compose up -d`，`data/` 不受影响。
+**镜像本身**（Android SDK、管理面板）：使用预编译镜像时执行 `docker compose pull && docker compose up -d`；自行构建时执行 `docker compose build --pull && docker compose up -d`。`data/` 不受影响。
 
 ## 数据目录 `/data`
 
